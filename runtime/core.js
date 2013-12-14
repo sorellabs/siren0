@@ -19,19 +19,17 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var Root, List, String, Number
-
-void function() {
+module.exports = function() {
 
   var define = Object.defineProperty
 
   function expectType(a, b) {
-    if (!a.isPrototypeOf(b))
+    if (!b['is-child-of:'](a))
       throw TypeError('Expected ' + a.type + ', got ' + b.type)
   }
 
 
-  Root = Object.create(null)
+  var Root = Object.create(null)
   define(Root, 'type', { value: 'Root' })
   define(Root, 'toString', { value: function() { return this['as-string']() }})
   define(Root, 'toJson', { value: function(){ return this['as-json']() }})
@@ -46,6 +44,9 @@ void function() {
   }
 
   Root['get-slot'] = function(name) {
+    if (!(name in this))
+      throw new Error(this.toString() + ' has no method "' + name + '"')
+
     return this[name].bind(this)
   }
 
@@ -53,8 +54,14 @@ void function() {
     return Object.getPrototypeOf(this)
   }
 
+  Root['is-child-of:'] = function(a) {
+    return Object.isPrototypeOf.call(a, this)
+  }
+
   Root['slots'] = function() {
-    return List.clone({ __value: Object.keys(this) })
+    return List.clone({ __value: Object.keys(this).map(function(a) {
+                                   return String.clone({ __value: a.split('') })
+                                 })})
   }
 
   Root['as-string'] = function() {
@@ -65,12 +72,35 @@ void function() {
     return this
   }
 
+  Root['List'] = function() {
+    return List
+  }
+
+  Root['String'] = function() {
+    return String
+  }
+
+  Root['Number'] = function() {
+    return Number
+  }
+
   Root['print:'] = function(a) {
     console.log(a.toString())
     return this
   }
 
-  List = Root.clone()
+  Root['load:'] = function(a) {
+    expectType(String, a)
+    return load(a.toString())()
+  }
+
+  Root['load:with:'] = function(a, bs) {
+    expectType(String, a)
+    expectType(List, bs)
+    return load(a.toString()).apply(null, bs.__value)
+  }
+
+  var List = Root.clone()
   define(List, 'type', { value: 'List' })
 
   // Representations
@@ -86,7 +116,7 @@ void function() {
 
   List['++'] = function(a) {
     expectType(List, a)
-    return this.clone({ __value: this.__value.concat(a.value) })
+    return this.clone({ __value: this.__value.concat(a.__value) })
   }
 
   List['head'] = function() {
@@ -112,7 +142,7 @@ void function() {
   // Transformations
   List['map:'] = function(f) {
     return List.clone({ __value: this.__value.map(function(a) {
-                                   return f['apply:'](a)
+                                   return f['get-slot']('apply:')(a)
                                  })})
   }
 
@@ -122,7 +152,7 @@ void function() {
 
   List['fold-from:using:'] = function(b, f) {
     return this.__value.reduce(function(c, a) {
-             return f['apply:with:'](a, c)
+             return f['get-slot']('apply:with:')(a, c)
            }, b)
   }
 
@@ -137,7 +167,7 @@ void function() {
 
 
   // String
-  String = List.clone()
+  var String = List.clone()
   define(String, 'type', { value: 'String' })
 
   String['as-string'] = function() {
@@ -145,7 +175,7 @@ void function() {
   }
 
   // Number
-  Number = Root.clone()
+  var Number = Root.clone()
   define(Number, 'type', { value: 'Number' })
 
   Number['+'] = function(a) {
@@ -172,4 +202,7 @@ void function() {
     return '' + this.__value
   }
 
-}()
+  return Root
+}
+
+var __Root = module.exports()

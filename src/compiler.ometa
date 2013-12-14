@@ -28,23 +28,24 @@ function fn(as, b) {
 }
 
 function makeNumber(a) {
-  return 'Number.clone({ __value: ' + a + ' })'
+  return '__Root.Number().clone({ __value: ' + a + ' })'
 }
 
 function makeString(a) {
-  return 'String.clone({ __value: ' + string(a) + '.split("") })'
+  return '__Root.String().clone({ __value: ' + string(a) + '.split("") })'
 }
 
 function makeVector(as) {
-  return '[' + as.join(', ') + ']'
+  return '__Root.List().clone({ __value: [' + as.join(', ') + '] })'
 }
 
 function makeObject(ps) {
-  return '{' + ps.reduce(function(a, b) {
-                           return a.concat([string(b[0]) + ': ' + b[1]])
-                         }, [])
-                 .join(', ')
-       + '}'
+  return '__Root.clone({' 
+       + ps.reduce(function(a, b) {
+                       return a.concat([string(b[0]) + ': ' + b[1]])
+                     }, [])
+             .join(', ')
+       + '})'
 }
 
 function make1Pattern(a, b) {

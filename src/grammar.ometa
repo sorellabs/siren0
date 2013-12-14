@@ -4,7 +4,7 @@ ometa PurrParser {
   hs           = comment* (' ' | '\t' | '\n' | '\r') comment*,
   eol          = '\n' | '\r',
   comment      = ';' (~eol char)*:a eol -> a.join(''),
-  symbol       = ~(letter | digit | space | '.' | ':' | '{' | '}' | '(' | ')') char,
+  symbol       = ~(letter | digit | space | '.' | ':' | '[' | ']' | '{' | '}' | '(' | ')') char,
 
   // Identifiers
   idStart      = letter,

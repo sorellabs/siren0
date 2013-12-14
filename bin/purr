@@ -20,12 +20,24 @@ var fs = require('fs')
 function read(filename) { return fs.readFileSync(filename, 'utf-8') }
 
 var docopt = require('docopt').docopt
+var path   = require('path')
 var pkg    = require('../package')
-var cc     = require('../').compile
-var parse  = require('../').parse
+var purr   = require('../')
 
 var args = docopt(doc, { version: pkg.version })
+var root = path.resolve('.')
 
-; (args['--compile'])?  console.log(cc(parse(read(args['<file>']))))
-: (args['--ast'])?      console.log(JSON.stringify(parse(read(args['<file>'])), null, 2))
-:                       new Function('module = { exports: {} };' + cc(parse(read(args['<file>']))) + ';\nmodule.exports().main()')()
+; (args['--compile'])?  console.log(purr.compile(purr.parse(read(args['<file>']))))
+: (args['--ast'])?      console.log(JSON.stringify(purr.parse(read(args['<file>'])), null, 2))
+:                       load(path.join(root, args['<file>']))(purr.runtime()).main()
+
+
+function load(p) {
+  var module
+  new Function('load', 'module', purr.compile(purr.parse(read(p))))
+      ( function(a) { return load(path.join(root, p), '') }
+      , module = { exports: {} })
+
+  console.log(purr.compile(purr.parse(read(p))))
+  return module.exports
+}

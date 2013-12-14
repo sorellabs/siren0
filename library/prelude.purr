@@ -31,9 +31,3 @@ False => Bool {
   not             => True.
   == a            => a is-false.
 }.
-
-String => Root {
-  
-}.
-
-
