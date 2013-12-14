@@ -16,7 +16,7 @@ Bool => Root {
 
 True => this Bool {
   is-true         => this True.
-  then: f else: g => f call.
+  then: f else: g => f apply.
   /\ a            => a.
   \/ a            => this True.
   not             => this False.
@@ -26,7 +26,7 @@ True => this Bool {
 
 False => this Bool {
   is-false        => this True.
-  then: f else: g => g call.
+  then: f else: g => g apply.
   /\ a            => this False.
   \/ a            => a.
   not             => this True.

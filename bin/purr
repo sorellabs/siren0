@@ -36,7 +36,6 @@ var root = path.resolve('.')
 function load(p, more) {
   var module
 
-  console.log(purr.compile(purr.parse(read(p))) + more)
   new Function('load', 'module', purr.compile(purr.parse(read(p))) + more)
       ( function(a) { return load(path.resolve(root, p, '..', a), '') }
       , module = { exports: {} })
