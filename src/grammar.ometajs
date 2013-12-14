@@ -1,0 +1,74 @@
+ometa PurrParser {
+  space        = ^space | comment,
+  ws           = space*,
+  hs           = comment* (' ' | '\t' | '\n' | '\r') comment*,
+  eol          = '\n' | '\r',
+  comment      = ';' (~eol char)*:a eol -> a.join(''),
+  symbol       = ~(letter | digit | space | '.' | ':' | '{' | '}' | '(' | ')') char,
+
+  // Identifiers
+  idStart      = letter,
+  idRest       = letter | digit | '-' | symbol,
+  identifier   = ws <idStart idRest*>:a ~':' -> [#id, a],
+  keyword      = ws <idStart idRest*>:a ':'  -> [#kw, a],
+  symbols      = ws symbol+:as               -> [#sym, as.join('')],
+  
+
+  // Patterns
+  pattern     = keywordPattern
+              | binaryPattern
+              | unaryPattern,
+
+  patternBody = hs+ "=>" hs+ expr:a ws '.' -> a,
+
+  keywordPattern = keywordArgs:as patternBody:v             -> [#patternKw, as, v],
+  unaryPattern   = identifier:a patternBody:v               -> [#pattern1, a, v],
+  binaryPattern  = symbols:a hs+ identifier:b patternBody:v -> [#pattern2, a, b, v],
+
+  keywordArgs  = (keyword:k identifier:n -> [k, n])*,
+
+
+  // Module definition
+  module = moduleArgs:as (ws pattern)*:ps     -> [#module, as, ps],
+  moduleArgs = '|' (hs+ identifier)*:as ws '|' -> as,
+
+  // Expressions
+  expr = keywordExpr
+       | binaryExpr,
+
+  keywordExpr = binaryExpr:a (hs+ keywordApp)+:as -> [#keyword, a, as],
+  binaryExpr  = binaryExpr:a hs+ symbols:s hs+ unaryExpr:b -> [#binary, s, a, b]
+              | unaryExpr,
+  unaryExpr   = unaryExpr:a hs+ identifier:i -> [#unary, a, i]
+              | unaryExpr:a hs+ object:v     -> [#clone, a, v]
+              | primaryExpr,
+  keywordApp  = keyword:k ws binaryExpr:v -> [k, v],
+
+  primaryExpr = value
+              | identifier
+              | '(' ws expr:a ws ')' -> a,
+
+  // Values
+  value = number
+        | string
+        | vector
+        | object,
+
+  digits = digit+:as -> Number(as.join('')),
+  number = digits:a (',' digits:b)? -> [#number, Number(a + '.' + (b || 0))],
+
+  stringEscape = '\\' '"',
+  stringChar   = (stringEscape | (~seq('\"') char)):a -> a,
+  string       = '\"' stringChar*:as '\"'             -> [#string, as.join('')],
+
+  vector = '[' ws expr:hd (ws '.' ws expr*:tl) ws ']' -> [#vector, [hd].concat(tl)]
+         | '[' ws expr:hd ws ']'                      -> [#vector, [hd]]
+         | '[' ws ']'                                 -> [#vector],
+
+  object = '{' (ws pattern)*:ps ws '}' -> [#object, ps],
+
+  // Program
+  program = ws module:m ws -> m
+}
+
+module.exports = PurrParser

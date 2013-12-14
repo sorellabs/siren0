@@ -1,0 +1,30 @@
+{
+  "name": "purr",
+  "version": "0.1.0",
+  "description": "The Purr programming language.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/robotlolita/purr.git"
+  },
+  "keywords": [
+    "purr",
+    "programming",
+    "language",
+    "oop",
+    "pure",
+    "pl"
+  ],
+  "author": "Quildreen Motta",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/robotlolita/purr/issues"
+  },
+  "homepage": "https://github.com/robotlolita/purr",
+  "dependencies": {
+    "ometa-js": "~1.1.3"
+  }
+}
