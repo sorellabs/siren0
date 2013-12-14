@@ -1,0 +1,91 @@
+ometa PurrCompiler {
+  compileKw = [[#kw :a] compile:b] -> [a, b],
+  compile = [#id :a]                                   -> a
+          | [#kw :a]                                   -> a
+          | [#sym :a]                                  -> a
+          | [#number :a]                               -> makeNumber(a)
+          | [#string :a]                               -> makeString(a)
+          | [#vector [compile*:as]]                    -> makeVector(as)
+          | [#object [compile*:ps]]                    -> makeObject(ps)
+          | [#patternKw [compileKw*:as] compile:a]     -> makeKwPattern(as, a)
+          | [#pattern1  compile:a compile:b]           -> make1Pattern(a, b)
+          | [#pattern2  compile:a compile:b compile:c] -> make2Pattern(a, b, c)
+          | [#module [compile*:as] [compile*:bs]]      -> makeModule(as, bs)
+          | [#keyword compile:a [compileKw*:bs]]       -> makeKwCall(a, bs)
+          | [#binary compile:a compile:b compile:c]    -> makeBinCall(a, b, c)
+          | [#unary compile:a compile:b]               -> makeUnCall(a, b)
+          | [#clone compile:a compile:b]               -> makeClone(a, b)
+}
+
+var string = JSON.stringify
+
+function thunk(a) {
+  return '(function(){ return ' + a + ' })'
+}
+
+function fn(as, b) {
+  return '(function(' + as.join(', ') + '){ return ' + b + ' })'
+}
+
+function makeNumber(a) {
+  return 'Number.clone({ value: ' + a + ' })'
+}
+
+function makeString(a) {
+  return 'String.clone({ value: ' + string(a) + ' })'
+}
+
+function makeVector(as) {
+  return '[' + as.join(', ') + ']'
+}
+
+function makeObject(ps) {
+  return '{' + ps.reduce(function(a, b) {
+                           return a.concat([string(b[0]) + ': ' + b[1]])
+                         }, [])
+                 .join(', ')
+       + '}'
+}
+
+function make1Pattern(a, b) {
+  return [a, thunk(b)]
+}
+
+function make2Pattern(a, b, c) {
+  return [a, fn([b], c)]
+}
+
+function makeKwPattern(as, b) {
+  var kws = as.map(function(a){ return a[0] + ':' }).join('')
+  var vls = as.map(function(a){ return a[1] })
+  return [kws, fn(vls, b)]
+}
+
+function makeModule(as, b) {
+  return 'module.exports = ' + fn(as, makeObject(b))
+}
+
+function makeKwCall(a, bs) {
+console.log(a, bs)
+  var kws = bs.map(function(a){ return a[0] + ':' }).join('')
+  var vls = bs.map(function(a){ return a[1] })
+  return '(' + a + ')[' + string(kws) + '](' + vls.join(', ') + ')'
+}
+
+function makeBinCall(a, b, c) {
+  return '(' + a + ')[' + string(b) + '](' + c + ')'
+}
+
+function makeUnCall(a, b) {
+  return '(' + a + ')[' + string(b) + ']()'
+}
+
+function makeClone(a, b) {
+  return '(' + a + ').clone(' + b + ')'
+}
+
+function makeExprs(as) {
+  return as.join(';')
+}
+ 
+module.exports = PurrCompiler

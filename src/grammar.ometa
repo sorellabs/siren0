@@ -37,7 +37,7 @@ ometa PurrParser {
        | binaryExpr,
 
   keywordExpr = binaryExpr:a (hs+ keywordApp)+:as -> [#keyword, a, as],
-  binaryExpr  = binaryExpr:a hs+ symbols:s hs+ unaryExpr:b -> [#binary, s, a, b]
+  binaryExpr  = binaryExpr:a hs+ symbols:s hs+ unaryExpr:b -> [#binary, a, s, b]
               | unaryExpr,
   unaryExpr   = unaryExpr:a hs+ identifier:i -> [#unary, a, i]
               | unaryExpr:a hs+ object:v     -> [#clone, a, v]
@@ -45,7 +45,7 @@ ometa PurrParser {
   keywordApp  = keyword:k ws binaryExpr:v -> [k, v],
 
   primaryExpr = value
-              | identifier
+              | identifier:a
               | '(' ws expr:a ws ')' -> a,
 
   // Values
