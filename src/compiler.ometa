@@ -28,11 +28,11 @@ function fn(as, b) {
 }
 
 function makeNumber(a) {
-  return 'Number.clone({ value: ' + a + ' })'
+  return 'Number.clone({ __value: ' + a + ' })'
 }
 
 function makeString(a) {
-  return 'String.clone({ value: ' + string(a) + ' })'
+  return 'String.clone({ __value: ' + string(a) + '.split("") })'
 }
 
 function makeVector(as) {
@@ -66,18 +66,17 @@ function makeModule(as, b) {
 }
 
 function makeKwCall(a, bs) {
-console.log(a, bs)
   var kws = bs.map(function(a){ return a[0] + ':' }).join('')
   var vls = bs.map(function(a){ return a[1] })
-  return '(' + a + ')[' + string(kws) + '](' + vls.join(', ') + ')'
+  return '(' + a + ')["get-slot"](' + string(kws) + ')(' + vls.join(', ') + ')'
 }
 
 function makeBinCall(a, b, c) {
-  return '(' + a + ')[' + string(b) + '](' + c + ')'
+  return '(' + a + ')["get-slot"](' + string(b) + ')(' + c + ')'
 }
 
 function makeUnCall(a, b) {
-  return '(' + a + ')[' + string(b) + ']()'
+  return '(' + a + ')["get-slot"](' + string(b) + ')()'
 }
 
 function makeClone(a, b) {

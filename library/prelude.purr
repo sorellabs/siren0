@@ -1,0 +1,39 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; :Module: Prelude
+;; :Copyright: (c) Quildreen Motta
+;; :License: MIT
+;;
+;; The standard library for the Purr programming language.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+| Root |
+
+Bool => Root {
+  is-true         => False.
+  is-false        => False.
+  then: f else: g => Undefined.
+}.
+
+True => Bool {
+  is-true         => True.
+  then: f else: g => f call.
+  /\ a            => a.
+  \/ a            => True.
+  not             => False.
+  = a             => a is-true.
+}.
+
+False => Bool {
+  is-false        => True.
+  then: f else: g => g call.
+  /\ a            => False.
+  \/ a            => a.
+  not             => True.
+  == a            => a is-false.
+}.
+
+String => Root {
+  
+}.
+
+

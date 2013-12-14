@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+var doc = "purr - A purely object oriented, referentially transparent language!\n"
+        + "\n"
+        + "Usage:\n"
+        + "  purr <file>\n"
+        + "  purr -c <file>\n"
+        + "  purr -a <file>\n"
+        + "  purr -h | --help\n"
+        + "  purr -v | --version\n"
+        + "\n"
+        + "Options:\n"
+        + "  -c, --compile   Compiles the file rather than interpreting.\n"
+        + "  -a, --ast       Displays the AST.\n"
+        + "  -h, --help      Displays this screen and exits.\n"
+        + "  -v, --version   Displays the version number and exits.\n"
+
+
+var fs = require('fs')
+
+function read(filename) { return fs.readFileSync(filename, 'utf-8') }
+
+var docopt = require('docopt').docopt
+var pkg    = require('../package')
+var cc     = require('../').compile
+var parse  = require('../').parse
+
+var args = docopt(doc, { version: pkg.version })
+
+; (args['--compile'])?  console.log(cc(parse(read(args['<file>']))))
+: (args['--ast'])?      console.log(JSON.stringify(parse(read(args['<file>'])), null, 2))
+:                       new Function('module = { exports: {} };' + cc(parse(read(args['<file>']))) + ';\nmodule.exports().main()')()

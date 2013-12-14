@@ -19,16 +19,24 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+var fs       = require('fs')
+var path     = require('path')
 var ometa    = require('ometa-js')
 var grammar  = require('./grammar')
 var compiler = require('./compiler')
+var beautify = require('node-beautify').beautifyJs
+
+function read(f) {
+  return fs.readFileSync(f, 'utf-8')
+}
 
 function parse(s) {
   return grammar.matchAll(s, 'program')
 }
 
 function compile(s) {
-  return compiler.match(s, 'compile')
+  return read(path.join(__dirname, '../runtime/core.js')) + ';\n'
+       + beautify(compiler.match(s, 'compile'), { indentSize: 2 })
 }
 
 module.exports = {
