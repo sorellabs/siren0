@@ -29,15 +29,17 @@ var root = path.resolve('.')
 
 ; (args['--compile'])?  console.log(purr.compile(purr.parse(read(args['<file>']))))
 : (args['--ast'])?      console.log(JSON.stringify(purr.parse(read(args['<file>'])), null, 2))
-:                       load(path.join(root, args['<file>']))(purr.runtime()).main()
+:                       load(path.resolve(root, args['<file>'])
+                            ,';\nmodule.exports(__Root).main()')
 
 
-function load(p) {
+function load(p, more) {
   var module
-  new Function('load', 'module', purr.compile(purr.parse(read(p))))
-      ( function(a) { return load(path.join(root, p), '') }
+
+  console.log(purr.compile(purr.parse(read(p))) + more)
+  new Function('load', 'module', purr.compile(purr.parse(read(p))) + more)
+      ( function(a) { return load(path.resolve(root, p, '..', a), '') }
       , module = { exports: {} })
 
-  console.log(purr.compile(purr.parse(read(p))))
   return module.exports
 }

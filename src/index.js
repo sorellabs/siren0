@@ -43,8 +43,8 @@ function runtimeFile() {
   return read(path.join(__dirname, '../runtime/core.js'))
 }
 
-function runtime() {
-  return require('../runtime/core.js')()
+function runtime(loader) {
+  return require('../runtime/core.js')(loader)
 }
 
 module.exports = {

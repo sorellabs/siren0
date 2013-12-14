@@ -24,13 +24,13 @@ module.exports = function() {
   var define = Object.defineProperty
 
   function expectType(a, b) {
-    if (!b['is-child-of:'](a))
+    if (b.type !== a.type)
       throw TypeError('Expected ' + a.type + ', got ' + b.type)
   }
 
 
   var Root = Object.create(null)
-  define(Root, 'type', { value: 'Root' })
+  define(Root, 'type', { value: '<Root>' })
   define(Root, 'toString', { value: function() { return this['as-string']() }})
   define(Root, 'toJson', { value: function(){ return this['as-json']() }})
 
@@ -85,7 +85,7 @@ module.exports = function() {
   }
 
   Root['print:'] = function(a) {
-    console.log(a.toString())
+    console.log('' + a.toString())
     return this
   }
 
@@ -101,7 +101,7 @@ module.exports = function() {
   }
 
   var List = Root.clone()
-  define(List, 'type', { value: 'List' })
+  define(List, 'type', { value: '<List>' })
 
   // Representations
   List['as-string'] = function() {
@@ -168,7 +168,7 @@ module.exports = function() {
 
   // String
   var String = List.clone()
-  define(String, 'type', { value: 'String' })
+  define(String, 'type', { value: '<String>' })
 
   String['as-string'] = function() {
     return this.__value.join('')
@@ -176,7 +176,7 @@ module.exports = function() {
 
   // Number
   var Number = Root.clone()
-  define(Number, 'type', { value: 'Number' })
+  define(Number, 'type', { value: '<Number>' })
 
   Number['+'] = function(a) {
     expectType(Number, a)

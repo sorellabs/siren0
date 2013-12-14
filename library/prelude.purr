@@ -9,25 +9,27 @@
 | Root |
 
 Bool => Root {
-  is-true         => False.
-  is-false        => False.
-  then: f else: g => Undefined.
+  is-true         => this False.
+  is-false        => this False.
+  then: f else: g => Root.
 }.
 
-True => Bool {
-  is-true         => True.
+True => this Bool {
+  is-true         => this True.
   then: f else: g => f call.
   /\ a            => a.
-  \/ a            => True.
-  not             => False.
+  \/ a            => this True.
+  not             => this False.
   = a             => a is-true.
+  as-string       => "<#True>".
 }.
 
-False => Bool {
-  is-false        => True.
+False => this Bool {
+  is-false        => this True.
   then: f else: g => g call.
-  /\ a            => False.
+  /\ a            => this False.
   \/ a            => a.
-  not             => True.
+  not             => this True.
   == a            => a is-false.
+  as-string       => "<#False>".
 }.
