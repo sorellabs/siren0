@@ -3,6 +3,7 @@ ometa PurrCompiler {
   compile = [#id :a]                                   -> a
           | [#kw :a]                                   -> a
           | [#sym :a]                                  -> a
+          | [#prop :a]                                 -> makeProperty(a)
           | [#number :a]                               -> makeNumber(a)
           | [#string :a]                               -> makeString(a)
           | [#vector [compile*:as]]                    -> makeVector(as)
@@ -24,28 +25,39 @@ function thunk(a) {
 }
 
 function fn(as, b) {
-  return '(function(' + as.join(', ') + '){ return ' + b + ' })'
+  return '(function($scope) {'
+       + '  return function(' + as.join(', ') + ') {'
+       +      as.map(function(a) {
+                return '    $scope[' + string(a) + '] = ' + thunk(a) + ';'
+              }).join('\n')
+       + '    return ' + b
+       + '  }'
+       + '})($scope.$clone())'
 }
 
 function makeNumber(a) {
-  return '__Root.Number().clone({ __value: ' + a + ' })'
+  return '$runtime.Number.$clone({ $value: ' + a + ' })'
 }
 
 function makeString(a) {
-  return '__Root.String().clone({ __value: ' + string(a) + '.split("") })'
+  return '$runtime.String.$clone({ $value: ' + string(a) + '.split("") })'
 }
 
 function makeVector(as) {
-  return '__Root.List().clone({ __value: [' + as.join(', ') + '] })'
+  return '$runtime.List.$clone({ $value: [' + as.join(', ') + '] })'
 }
 
 function makeObject(ps) {
-  return '__Root.clone({' 
-       + ps.reduce(function(a, b) {
-                       return a.concat([string(b[0]) + ': ' + b[1]])
-                     }, [])
-             .join(', ')
-       + '})'
+  return '(function($scope) {'
+       +    ps.map(function(a) {
+              return '  $scope[' + string(a[0]) + '] = ' + a[1] + ';'
+            }).join('\n')
+       + '  return $scope'
+       + '}($scope.$clone()))'
+}
+
+function makeProperty(a) {
+  return '$scope["get-slot"](' + string(a) + ')()'
 }
 
 function make1Pattern(a, b) {
@@ -63,7 +75,9 @@ function makeKwPattern(as, b) {
 }
 
 function makeModule(as, b) {
-  return 'module.exports = ' + fn(as, makeObject(b))
+  return 'void function($scope) {'
+       + '  module.exports = ' + fn(as, makeObject(b))
+       + '}($runtime.Root.$clone())'
 }
 
 function makeKwCall(a, bs) {
@@ -81,7 +95,7 @@ function makeUnCall(a, b) {
 }
 
 function makeClone(a, b) {
-  return '(' + a + ').clone(' + b + ')'
+  return '(' + a + ').$clone(' + b + ')'
 }
 
 function makeExprs(as) {

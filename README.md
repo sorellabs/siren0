@@ -17,10 +17,10 @@ Prelude => Root load: "library/prelude.purr" with: [Root].
 
 ;; Main is PURE! You need to give it an IO () thingie.
 main => (Prelude True /\ Prelude False)
-        then: { apply => Root print: "Cool!" }
-        else: { apply => Root print: "Bleh :(" }
+        then: { apply => Root IO print: "Cool!" }
+        else: { apply => Root IO print: "Bleh :(" }
 ```
 
 ## Licence
 
-MIT.
+MIT

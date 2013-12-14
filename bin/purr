@@ -29,8 +29,14 @@ var root = path.resolve('.')
 
 ; (args['--compile'])?  console.log(purr.compile(purr.parse(read(args['<file>']))))
 : (args['--ast'])?      console.log(JSON.stringify(purr.parse(read(args['<file>'])), null, 2))
-:                       load(path.resolve(root, args['<file>'])
-                            ,';\nmodule.exports(__Root).main()')
+:                       function() {
+                          purr.loadRuntime()
+                          load( path.resolve(root, args['<file>'])
+                              , ';\n'
+                              + 'module.exports($runtime.Lobby)'
+                              + '["get-slot"]("main:")(process.argv)'
+                              )
+                        }()
 
 
 function load(p, more) {

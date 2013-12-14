@@ -45,7 +45,7 @@ ometa PurrParser {
   keywordApp  = keyword:k ws binaryExpr:v -> [k, v],
 
   primaryExpr = value
-              | identifier:a
+              | identifier:a         -> [#prop, a[1]]
               | '(' ws expr:a ws ')' -> a,
 
   // Values

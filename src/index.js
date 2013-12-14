@@ -35,21 +35,20 @@ function parse(s) {
 }
 
 function compile(s) {
-  return runtimeFile() + ';\n'
-       + beautify(compiler.match(s, 'compile'), { indentSize: 2 })
+  return beautify(compiler.match(s, 'compile'), { indentSize: 2 })
 }
 
 function runtimeFile() {
   return read(path.join(__dirname, '../runtime/core.js'))
 }
 
-function runtime(loader) {
-  return require('../runtime/core.js')(loader)
+function loadRuntime() {
+  return require('../runtime/core.js')
 }
 
 module.exports = {
   parse: parse
 , compile: compile
-, runtime: runtime
+, loadRuntime: loadRuntime
 , runtimeFile: runtimeFile
 }
