@@ -40,7 +40,11 @@ function makeNumber(a) {
 }
 
 function makeString(a) {
-  return '$runtime.String.$clone({ $value: ' + string(a) + '.split("") })'
+  return '$runtime.String.$clone({ $value: ' 
+       +    string(a) + '.split("").map(function(a){'
+       + '    return $runtime.Character.$clone({ $value: a })'
+       + '  })' 
+       + '})'
 }
 
 function makeVector(as) {

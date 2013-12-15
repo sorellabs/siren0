@@ -13,6 +13,10 @@ void function(global) {
     return a
   }}
 
+  function make(type, value) {
+    return Object.create(type, { $value: value })
+  }
+
   function apply0(f) {
     return f['get-slot']('apply')()
   }
@@ -52,10 +56,10 @@ void function(global) {
 
   function ordering(a) {
     expectType(Ordering, a)
-    return a === Ordering.greater()?  1
-    :      a === Ordering.lesser()?  -1
-    :      a === Ordering.equal()?    0
-    :      /* otherwise */            raise('Unknown ordering: ' + a)
+    return a === GT?  1
+    :      a === LT? -1
+    :      a === EQ?  0
+    :      /* _ */    raise('Unknown ordering: ' + a)
   }
 
   // System definitions
@@ -89,13 +93,13 @@ void function(global) {
   }
 
   Root['slots'] = function() {
-    return List.$clone({ $value: Object.keys(this).map(function(a) {
-                                   return String.clone({ $value: a.split('') })
-                                 })})
+    return make(List, Object.keys(this).map(function(a) {
+                        return make(String, a.split(''))
+                      }))
   }
 
   Root['compare-to:'] = function(a) {
-    return Ordering.equal()
+    return UNKNOWN
   }
   Root['='] = function(a) {
     return this['compare-to:'](a) === EQ?  True : False
@@ -131,6 +135,17 @@ void function(global) {
   }
   Boolean['is-false'] = function() {
     return False
+  }
+  Boolean['compare-to:'] = function(a) {
+    if (this === True) {
+      return a === True?  EQ
+      :      /* _ */      GT
+    }
+    else if (this === False) {
+      return a === False?  EQ
+      :      /* _ */       LT
+    }
+    return UNKNOWN
   }
 
 
@@ -179,12 +194,12 @@ void function(global) {
   }
 
   List['append:'] = function(a) {
-    return this['++'](List.$clone({ $value: a }))
+    return this['++'](make(this, a))
   }
 
   List['++'] = function(a) {
     expectType(List, a)
-    return this.$clone({ $value: this.$value.concat(a.$value) })
+    return make(this, this.$value.concat(a.$value))
   }
 
   List['first'] = function() {
@@ -197,19 +212,19 @@ void function(global) {
   List['slice-from:to:'] = function(start, end) {
     expectType(Number, start)
     expectType(Number, end)
-    return this.$clone({ $value: this.$value.slice(start.$value, end.$value) })
+    return make(this, this.$value.slice(start.$value, end.$value))
   }
 
   List['rest'] = function() {
-    return this.$clone({ $value: this.$value.slice(1) })
+    return make(this, this.$value.slice(1))
   }
 
   List['but-last'] = function() {
-    return this.$clone({ $value: this.$value.slice(0, -1) })
+    return make(this, this.$value.slice(0, -1))
   }
 
   List['size'] = function() {
-    return Number.$clone({ $value: this.$value.length })
+    return make(Number, this.$value.length)
   }
 
   List['is-empty?'] = function() {
@@ -218,13 +233,11 @@ void function(global) {
 
   List['map:'] = function(f) {
     expectRespondTo(f, 'apply:')
-    return this.$clone({ $value: this.$value.map(function(a) {
-                                   return apply1(f, a)
-                                 })})
+    return make(this, this.$value.map(function(a){ return apply1(f, a) }))
   }
 
   List['reverse'] = function() {
-    return this.$clone({ $value: this.$value.slice().reverse() })
+    return make(this, this.$value.slice().reverse())
   }
 
   List['fold-right:using:'] = function(b, f) {
@@ -242,11 +255,13 @@ void function(global) {
   }
 
   List['take:'] = function(n) {
-    return this.$clone({ $value: this.$value.slice(0, n) })
+    expectType(Number, n)
+    return make(this, this.$value.slice(0, n))
   }
 
   List['drop:'] = function(n) {
-    return this.$clone({ $value: this.$value.slice(n) })
+    expectType(Number, n)
+    return make(this, this.$value.slice(n))
   }
 
   List['contains:'] = function(a) {
@@ -263,9 +278,26 @@ void function(global) {
 
   List['sort-using:'] = function(f) {
     expectRespondTo(f, 'apply:with:')
-    return this.$clone({ $value: this.$value.sort(function(a, b) {
-                                   return apply2(f, a, b)
-                                 })})
+    return make(this, this.$value.sort(function(a, b) {
+                        return ordering(apply2(f, a, b))
+                      }))
+  }
+
+  List['compare-to:'] = function(a) {
+    expectType(List, a)
+    var len1 = this.$values.length, len2 = a.$values.length
+
+    return len1 < len2?  LT
+    :      len1 > len2?  GT
+    :      /* _ */       compareLists(this.$values, a.$values)
+
+    function compareLists(a, b) {
+      for (var i = 0; i < len1; ++i) {
+        var order = a[i]['compare-to:'](b[i])
+        if (order !== EQ)  return ordering
+      }
+      return EQ
+    }
   }
 
   // String
@@ -275,10 +307,62 @@ void function(global) {
   String['as-string'] = function() {
     return this.$value.join('')
   }
-  String['compare-to:'] = function(a) {
-    return a.$value > this.$value?  Ordering.lesser()
-    :      a.$value < this.$value?  Ordering.greater()
-    :      /* otherwise */          Ordering.equal()
+  String['upcase'] = function() {
+    return this.map({ 'apply:': function(a){ return a.upcase() } })
+  }
+  String['downcase'] = function() {
+    return this.map({ 'apply:': function(a){ return a.downcase() }})
+  }
+
+  // Character
+  var Character = Root.$clone()
+  define(Character, '$type', '<Character>')
+
+  Character['as-string'] = function() {
+    return this.$value
+  }
+  Character['compare-to:'] = function(a) {
+    expectType(Character, a)
+    return this.$value < a.$value?  LT
+    :      this.$value > a.$value?  GT
+    :      /* otherwise */          EQ
+  }
+  Character['is-space?'] = function() {
+    return /\s/.test(this.$value)
+  }
+  Character['is-lower?'] = function() {
+    return /[a-z]/.test(this.$value)
+  }
+  Character['is-upper?'] = function() {
+    return /[A-Z]/.test(this.$value)
+  }
+  Character['is-alpha?'] = function() {
+    return /\w/.test(this.$value)
+  }
+  Character['is-alpha-numeric?'] = function() {
+    return /[\w\d]/.test(this.$value)
+  }
+  Character['is-digit?'] = function() {
+    return /\d/.test(this.$value)
+  }
+  Character['is-octal-digit?'] = function() {
+    return /[0-7]/.test(this.$value)
+  }
+  Character['is-hexadecimal-digit?'] = function() {
+    return /[0-9a-fA-F]/.test(this.$value)
+  }
+  Character['upcase'] = function() {
+    return make(this, this.$value.toUpperCase())
+  }
+  Character['downcase'] = function() {
+    return make(this, this.$value.toLowerCase())
+  }
+  Character['from-code:'] = function(a) {
+    expectType(Number, a)
+    return make(this, String.fromCharCode(a.$value))
+  }
+  Character['as-code'] = function(a) {
+    return make(this, this.$value.charCodeAt(0))
   }
 
   // Number
@@ -295,42 +379,42 @@ void function(global) {
   }
   Number['+'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: this.$value + a.$value })
+    return make(this, this.$value + a.$value)
   }
   Number['*'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: this.$value * a.$value })
+    return make(this, this.$value * a.$value)
   }
   Number['-'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: this.$value - a.$value })
+    return make(this, this.$value - a.$value)
   }
   Number['/'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: this.$value / a.$value })
+    return make(this, this.$value / a.$value)
   }
   Number['**'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: Math.pow(this.$value, a.$value) })
+    return make(this, Math.pow(this.$value, a.$value))
   }
   Number['remainder'] = function(a) {
     expectType(Number, a)
-    return Number.$clone({ $value: this.$value % a.$value })
+    return make(this, this.$value % a.$value)
   }
   Number['negate'] = function() {
-    return Number.$clone({ $value: this.$value * -1 })
+    return make(this, this.$value * -1)
   }
   Number['absolute'] = function() {
-    return Number.$clone({ $value: Math.abs(this.$value) })
+    return make(this, Math.abs(this.$value))
   }
   Number['round'] = function() {
-    return Number.$clone({ $value: Math.round(this.$value) })
+    return make(this, Math.round(this.$value))
   }
   Number['floor'] = function() {
-    return Number.$clone({ $value: Math.floor(this.$value) })
+    return make(this, Math.floor(this.$value))
   }
   Number['ceil'] = function() {
-    return Number.$clone({ $value: Math.ceil(this.$value) })
+    return make(this, Math.ceil(this.$value))
   }
 
   // Ordering
@@ -339,6 +423,7 @@ void function(global) {
   var GT = Ordering.$clone()
   var EQ = Ordering.$clone()
   var LT = Ordering.$clone()
+  var UNKNOWN = Ordering.$clone()
 
   Ordering['greater'] = function() {
     return GT
@@ -349,9 +434,13 @@ void function(global) {
   Ordering['equal'] = function() {
     return EQ
   }
+  Ordering['unknown'] = function() {
+    return UNKNOWN
+  }
   GT['to-string'] = k('<#Ordering: greater than>')
   EQ['to-string'] = k('<#Ordering: equal>')
   LT['to-string'] = k('<#Ordering: less than>')
+  UNKNOWN['to-string'] = k('<#Ordering: unknown>')
 
   // Unsafe IO
   var IO = Root.$clone()
@@ -362,21 +451,23 @@ void function(global) {
 
   // The Lobby
   var Lobby = Root.$clone()
-  Lobby['Number']   = k(Number)
-  Lobby['String']   = k(String)
-  Lobby['List']     = k(List)
-  Lobby['True']     = k(True)
-  Lobby['False']    = k(False)
-  Lobby['Ordering'] = k(Ordering)
-  Lobby['IO']       = k(IO)
+  Lobby['Number']    = k(Number)
+  Lobby['String']    = k(String)
+  Lobby['Character'] = k(Character)
+  Lobby['List']      = k(List)
+  Lobby['True']      = k(True)
+  Lobby['False']     = k(False)
+  Lobby['Ordering']  = k(Ordering)
+  Lobby['IO']        = k(IO)
 
   // System initialisation
   global.$runtime = {}
-  $runtime.Root   = Root
-  $runtime.List   = List
-  $runtime.String = String
-  $runtime.Number = Number
-  $runtime.Lobby  = Lobby
+  $runtime.Root      = Root
+  $runtime.List      = List
+  $runtime.String    = String
+  $runtime.Number    = Number
+  $runtime.Character = Character
+  $runtime.Lobby     = Lobby
 }
 ( typeof global !== undefined?  global
 : typeof window !== undefined?  window
