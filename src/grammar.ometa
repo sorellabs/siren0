@@ -61,7 +61,7 @@ ometa PurrParser {
   stringChar   = (stringEscape | (~seq('\"') char)):a -> a,
   string       = '\"' stringChar*:as '\"'             -> [#string, as.join('')],
 
-  vector = '[' ws expr:hd (ws '.' ws expr*:tl) ws ']' -> [#vector, [hd].concat(tl)]
+  vector = '[' ws expr:hd (ws '.' ws expr)*:tl ws ']' -> [#vector, [hd].concat(tl)]
          | '[' ws expr:hd ws ']'                      -> [#vector, [hd]]
          | '[' ws ']'                                 -> [#vector],
 
