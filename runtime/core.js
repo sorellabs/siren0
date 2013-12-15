@@ -147,7 +147,7 @@ void function(global) {
     }
     return UNKNOWN
   }
-
+  Boolean['as-string'] = k('<#Boolean>')
 
   var True = Boolean.$clone()
   True['is-true'] = k(True)
@@ -164,6 +164,9 @@ void function(global) {
     expectRespondTo(f, 'apply')
     expectRespondTo(g, 'apply')
     return apply0(f)
+  }
+  True['as-string'] = function() {
+    return '<#Boolean: True>'
   }
 
   var False = Boolean.$clone()
@@ -182,7 +185,9 @@ void function(global) {
     expectRespondTo(g, 'apply')
     return apply0(g)
   }
-
+  False['as-string'] = function() {
+    return '<#Boolean: False>'
+  }
 
   // Lists
   var List = Root.$clone()
@@ -285,16 +290,16 @@ void function(global) {
 
   List['compare-to:'] = function(a) {
     expectType(List, a)
-    var len1 = this.$values.length, len2 = a.$values.length
+    var len1 = this.$value.length, len2 = a.$value.length
 
     return len1 < len2?  LT
     :      len1 > len2?  GT
-    :      /* _ */       compareLists(this.$values, a.$values)
+    :      /* _ */       compareLists(this.$value, a.$value)
 
     function compareLists(a, b) {
       for (var i = 0; i < len1; ++i) {
         var order = a[i]['compare-to:'](b[i])
-        if (order !== EQ)  return ordering
+        if (order !== EQ)  return order
       }
       return EQ
     }
@@ -437,10 +442,10 @@ void function(global) {
   Ordering['unknown'] = function() {
     return UNKNOWN
   }
-  GT['to-string'] = k('<#Ordering: greater than>')
-  EQ['to-string'] = k('<#Ordering: equal>')
-  LT['to-string'] = k('<#Ordering: less than>')
-  UNKNOWN['to-string'] = k('<#Ordering: unknown>')
+  GT['as-string'] = k('<#Ordering: greater than>')
+  EQ['as-string'] = k('<#Ordering: equal>')
+  LT['as-string'] = k('<#Ordering: less than>')
+  UNKNOWN['as-string'] = k('<#Ordering: unknown>')
 
   // Unsafe IO
   var IO = Root.$clone()
