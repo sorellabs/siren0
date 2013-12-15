@@ -199,7 +199,7 @@ void function(global) {
 
   List['as-string'] = function() {
     var xs = this.$value.map(function(a) { return a.toString() })
-    return toString('<#List(' + this['size']() + '): ' + xs.join(', ') + '>')
+    return toString('<#List(' + this['size']() + '): ' + xs.join(', ') + '>')()
   }
 
   List['append:'] = function(a) {
@@ -384,7 +384,7 @@ void function(global) {
   define(Number, '$type', '<Number>')
 
   Number['as-string'] = function() {
-    return toString('' + this.$value)
+    return toString('' + this.$value)()
   }
   Number['compare-to:'] = function(a) {
     return a.$value > this.$value?  Ordering.lesser()
