@@ -14,7 +14,7 @@ void function(global) {
   }}
 
   function make(type, value) {
-    return Object.create(type, { $value: value })
+    return Object.create(type, { $value: { value: value }})
   }
 
   function apply0(f) {
@@ -60,6 +60,14 @@ void function(global) {
     :      a === LT? -1
     :      a === EQ?  0
     :      /* _ */    raise('Unknown ordering: ' + a)
+  }
+
+  function toString(a) {
+    return function() {
+      return make(String, a.split('').map(function(b){
+                            return make(Character, b)
+                          }))
+    }
   }
 
   // System definitions
@@ -120,7 +128,7 @@ void function(global) {
     return this['>'](a)['\\/'](this['='](a))
   }
 
-  Root['as-string'] = k('<#Object>')
+  Root['as-string'] = toString('<#Object>')
 
   Root['as-json'] = function() {
     return this
@@ -147,7 +155,7 @@ void function(global) {
     }
     return UNKNOWN
   }
-  Boolean['as-string'] = k('<#Boolean>')
+  Boolean['as-string'] = toString('<#Boolean>')
 
   var True = Boolean.$clone()
   True['is-true'] = k(True)
@@ -165,9 +173,7 @@ void function(global) {
     expectRespondTo(g, 'apply')
     return apply0(f)
   }
-  True['as-string'] = function() {
-    return '<#Boolean: True>'
-  }
+  True['as-string'] = toString('<#Boolean: True>')
 
   var False = Boolean.$clone()
   False['is-false'] = k(True)
@@ -185,9 +191,7 @@ void function(global) {
     expectRespondTo(g, 'apply')
     return apply0(g)
   }
-  False['as-string'] = function() {
-    return '<#Boolean: False>'
-  }
+  False['as-string'] = toString('<#Boolean: False>')
 
   // Lists
   var List = Root.$clone()
@@ -195,7 +199,7 @@ void function(global) {
 
   List['as-string'] = function() {
     var xs = this.$value.map(function(a) { return a.toString() })
-    return '<#List(' + this['size']() + '): ' + xs.join(', ') + '>'
+    return toString('<#List(' + this['size']() + '): ' + xs.join(', ') + '>')
   }
 
   List['append:'] = function(a) {
@@ -308,23 +312,28 @@ void function(global) {
   // String
   var String = Root.$clone()
   define(String, '$type', '<String>')
-
-  String['as-string'] = function() {
+  define(String, 'toString', function() {
     return this.$value.join('')
-  }
+  })
   String['upcase'] = function() {
     return this.map({ 'apply:': function(a){ return a.upcase() } })
   }
   String['downcase'] = function() {
     return this.map({ 'apply:': function(a){ return a.downcase() }})
   }
+  String['as-string'] = function() {
+    return this
+  }
 
   // Character
   var Character = Root.$clone()
   define(Character, '$type', '<Character>')
+  define(Character, 'toString', function() {
+    return this.$value
+  })
 
   Character['as-string'] = function() {
-    return this.$value
+    return make(String, [this])
   }
   Character['compare-to:'] = function(a) {
     expectType(Character, a)
@@ -375,7 +384,7 @@ void function(global) {
   define(Number, '$type', '<Number>')
 
   Number['as-string'] = function() {
-    return '' + this.$value
+    return toString('' + this.$value)
   }
   Number['compare-to:'] = function(a) {
     return a.$value > this.$value?  Ordering.lesser()
@@ -442,10 +451,10 @@ void function(global) {
   Ordering['unknown'] = function() {
     return UNKNOWN
   }
-  GT['as-string'] = k('<#Ordering: greater than>')
-  EQ['as-string'] = k('<#Ordering: equal>')
-  LT['as-string'] = k('<#Ordering: less than>')
-  UNKNOWN['as-string'] = k('<#Ordering: unknown>')
+  GT['as-string'] = toString('<#Ordering: greater than>')
+  EQ['as-string'] = toString('<#Ordering: equal>')
+  LT['as-string'] = toString('<#Ordering: less than>')
+  UNKNOWN['as-string'] = toString('<#Ordering: unknown>')
 
   // Unsafe IO
   var IO = Root.$clone()
