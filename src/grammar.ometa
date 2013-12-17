@@ -4,7 +4,7 @@ ometa PurrParser {
   hs           = comment* (' ' | '\t' | '\n' | '\r') comment*,
   eol          = '\n' | '\r',
   comment      = ';' (~eol char)*:a eol -> a.join(''),
-  symbol       = ~(letter | digit | space | '.' | ':' | '[' | ']' | '{' | '}' | '(' | ')') char,
+  symbol       = ~(letter | digit | space | ',' | '.' | ':' | '[' | ']' | '{' | '}' | '(' | ')') char,
 
   // Identifiers
   idStart      = letter,
@@ -61,7 +61,7 @@ ometa PurrParser {
   stringChar   = (stringEscape | (~seq('\"') char)):a -> a,
   string       = '\"' stringChar*:as '\"'             -> [#string, as.join('')],
 
-  vector = '[' ws expr:hd (ws '.' ws expr)*:tl ws ']' -> [#vector, [hd].concat(tl)]
+  vector = '[' ws expr:hd (ws ',' ws expr)*:tl ws ']' -> [#vector, [hd].concat(tl)]
          | '[' ws expr:hd ws ']'                      -> [#vector, [hd]]
          | '[' ws ']'                                 -> [#vector],
 
