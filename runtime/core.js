@@ -411,7 +411,7 @@ void function(global) {
     expectType(Number, a)
     return make(this, Math.pow(this.$value, a.$value))
   }
-  Number['remainder'] = function(a) {
+  Number['remainder:'] = function(a) {
     expectType(Number, a)
     return make(this, this.$value % a.$value)
   }
