@@ -26,6 +26,7 @@
   "homepage": "https://github.com/robotlolita/purr",
   "dependencies": {
     "ometa-js": "~1.1.3",
-    "docopt": "~0.4.0"
+    "docopt": "~0.4.0",
+    "ometajs": "~3.3.4"
   }
 }

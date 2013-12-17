@@ -21,7 +21,7 @@
 
 var fs       = require('fs')
 var path     = require('path')
-var ometa    = require('ometa-js')
+var ometa    = require('ometajs')
 var grammar  = require('./grammar')
 var compiler = require('./compiler')
 var beautify = require('node-beautify').beautifyJs

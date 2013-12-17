@@ -2,6 +2,12 @@
 /* The Purr language runtime                                                 */
 /*****************************************************************************/
 
+var __String   = String
+var __Object   = Object
+var __Boolean  = Boolean
+var __Function = Function
+
+
 void function(global) {
 
   // Internal helpers
@@ -105,6 +111,9 @@ void function(global) {
                         return make(String, a.split(''))
                       }))
   }
+  Root['self'] = function() {
+    return this
+  }
 
   Root['compare-to:'] = function(a) {
     return UNKNOWN
@@ -198,8 +207,9 @@ void function(global) {
   define(List, '$type', '<List>')
 
   List['as-string'] = function() {
-    var xs = this.$value.map(function(a) { return a.toString() })
-    return toString('<#List(' + this['size']() + '): ' + xs.join(', ') + '>')()
+    var xs   = this.$value.map(function(a) { return a.toString() })
+    var size = this['size']().toString()
+    return toString('<#List(' + size + '): ' + xs.join(', ') + '>')()
   }
 
   List['append:'] = function(a) {
@@ -243,6 +253,12 @@ void function(global) {
   List['map:'] = function(f) {
     expectRespondTo(f, 'apply:')
     return make(this, this.$value.map(function(a){ return apply1(f, a) }))
+  }
+
+  List['filter:'] = function(f) {
+    expectRespondTo(f, 'apply:')
+    return make(this, this.$value.filter(function(a){
+                        return apply1(f, a) === True }))
   }
 
   List['reverse'] = function() {
@@ -310,7 +326,7 @@ void function(global) {
   }
 
   // String
-  var String = Root.$clone()
+  var String = List.$clone()
   define(String, '$type', '<String>')
   define(String, 'toString', function() {
     return this.$value.join('')
@@ -373,7 +389,7 @@ void function(global) {
   }
   Character['from-code:'] = function(a) {
     expectType(Number, a)
-    return make(this, String.fromCharCode(a.$value))
+    return make(this, __String.fromCharCode(a.$value))
   }
   Character['as-code'] = function(a) {
     return make(this, this.$value.charCodeAt(0))
@@ -429,6 +445,9 @@ void function(global) {
   }
   Number['ceil'] = function() {
     return make(this, Math.ceil(this.$value))
+  }
+  Number['square-root'] = function() {
+    return make(this, Math.sqrt(this.$value))
   }
 
   // Ordering

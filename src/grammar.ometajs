@@ -57,13 +57,13 @@ ometa PurrParser {
   digits = digit+:as -> Number(as.join('')),
   number = digits:a (',' digits:b)? -> [#number, Number(a + '.' + (b || 0))],
 
-  stringEscape = '\\' '"',
-  stringChar   = (stringEscape | (~seq('\"') char)):a -> a,
-  string       = '\"' stringChar*:as '\"'             -> [#string, as.join('')],
+  stringEscape = '\\' '”',
+  stringChar   = (stringEscape | (~seq('”') char)):a -> a,
+  string       = '“' stringChar*:as '”'              -> [#string, as.join('')],
 
-  vector = '[' ws expr:hd (ws ',' ws expr)*:tl ws ']' -> [#vector, [hd].concat(tl)]
+  vector = '[' ws expr:hd (hs+ expr)*:tl ws ']' -> [#vector, [hd].concat(tl)]
          | '[' ws expr:hd ws ']'                      -> [#vector, [hd]]
-         | '[' ws ']'                                 -> [#vector],
+         | '[' ws ']'                                 -> [#vector, []],
 
   object = '{' (ws pattern)*:ps ws '}' -> [#object, ps],
 
