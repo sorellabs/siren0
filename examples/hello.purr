@@ -21,4 +21,4 @@
 
 | Root |
 
-main: args => Root IO print: "Hello, world!".
+main: args => Root IO print: “Hello, world!”.
