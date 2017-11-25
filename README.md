@@ -1,9 +1,7 @@
-Purr
-====
+Siren0
+======
 
 A minimal pure purely object oriented prototypical language.
-
-Hopefully as cute as a kitten :3
 
 
 ## Example
